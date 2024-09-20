@@ -3,6 +3,7 @@ import openai
 import streamlit as st
 from streamlit_chat import message
 from dotenv import load_dotenv
+import uuid
 
 # load_dotenv(".env")
 
@@ -10,9 +11,14 @@ from dotenv import load_dotenv
 
 import streamlit as st
 from openai import OpenAI
+import langsmith as ls
+from langsmith.wrappers import wrap_openai
+
+if 'state_id' not in st.session_state:
+    st.session_state['state_id'] = str(uuid.uuid4())
 
 # Initialize the OpenAI client
-client = OpenAI()
+client = wrap_openai(OpenAI())
 
 pt = """
 Introduction: Hi there! I'm here to help with any questions you have. What's on your mind today?
@@ -42,7 +48,7 @@ Goal: Naturally make the users download the app.
 Important: If the user is interested in a loan, start hard selling the aspire app.
 """
 
-
+@ls.traceable(run_type="llm", tags=[st.session_state['state_id']], metadata={"conv_state": st.session_state['state_id']})
 def generate_response(prompt):
     # Prepare the conversation history
     conversation_history = [{"role": "system", "content": pt}]
